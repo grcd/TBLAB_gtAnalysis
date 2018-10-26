@@ -1,0 +1,385 @@
+
+runweightgt <- function(mirs, X, Y, path, dbName, tables, numOverlapping, weight=c("None", "Score", "max", "minmax", "rank"), top=-1)
+  {
+    ##for the moment necessary for weighting
+    TablesData <- list()
+    for(table in tables)
+      TablesData[[table]] <- dbHeadTable(file.path(path), dbName, table, n=-1)
+
+    targets <- list()
+    micrornas <- matrix(NA, nrow=length(mirs), ncol=2)
+    for(i in 1:length(mirs))
+      {
+                
+        ovl <- overlap(path, dbName, tables=tables, mirs[i], numOverlapping, full=FALSE)
+        if(is.null(ovl))
+          next       
+        
+        sX <- X[which(rownames(X) %in% rownames(ovl)),, drop=FALSE]
+        sy <- Y[which(rownames(Y) %in%  mirs[i]),]                 
+
+        ##for the moment necessary for weighting
+        TablesDataSubset <- list()
+        for(table in tables)
+          {
+            ##subset
+            TablesDataSubset[[table]] <- subset(TablesData[[table]], mRNA %in% rownames(ovl) & miRNA==mirs[i])      
+            ##remove duplicates
+            TablesDataSubset[[table]] <- TablesDataSubset[[table]][!duplicated(TablesDataSubset[[table]]$mRNA), ]        
+            ##order
+            TablesDataSubset[[table]] <- TablesDataSubset[[table]][order(as.integer(TablesDataSubset[[table]]$mRNA)),]
+          }
+
+        ##for the moment necessary for weighting
+        combineScores <- function(score)
+          {
+            s <- rep(0, nrow(ovl))
+            for(table in tables)
+              s <- s + TablesDataSubset[[table]][,score]
+            s  
+          }
+        
+        ##for the moment necessary for weighting
+        weights <- switch(weight,
+                          None = rep(1, nrow(sX)),
+                          Score = TablesDataSubset[[tables]]$Score, #raw score only make sense if one table is selected
+                          max = combineScores("max"), 
+                          minmax = combineScores("minmax"),
+                          rank = combineScores("rank")
+                          )
+                          
+ 
+        ##if(nrow(sX) < 1) ##number of targets should be > 1 (?)
+        ##  next
+        
+        ##print(length(sy))
+        ##print(dim(t(sX)))
+        
+        obj <- gt(sy, sX, directional=1e-6, weight = weights)
+        
+        tbl <- gtTable(obj)
+        tbl <- tbl[order(tbl$Association, tbl$Pvalue),]
+        if(top == -1)
+          targets[[mirs[i]]] <- tbl
+        else
+          targets[[mirs[i]]] <- tbl[1:max(c(top, nrow(tbl))),]
+        
+        micrornas[i,1] <- p.value(obj)
+        micrornas[i,2] <- size(obj)       
+      }
+    
+    colnames(micrornas) <- c("Pvalue", "targets")
+    rownames(micrornas) <- mirs    
+    micrornas <- data.frame(na.omit(micrornas))
+    micrornas <- micrornas[order(micrornas$Pvalue), ]
+    
+    list(mirs=micrornas, targets=targets)
+  }
+
+rungtreverse <- function(targets, X, Y, path, dbName, tables, numOverlapping, weight=c("None", "Score", "max", "minmax", "rank"), top=-1)
+  {
+    ##for the moment necessary for weighting
+    TablesData <- list()
+    for(table in tables)
+      TablesData[[table]] <- dbHeadTable(file.path(path), dbName, table, n=-1)
+
+    mirs <- list()
+    mrnas <- matrix(NA, nrow=length(targets), ncol=2)
+    for(i in 1:length(targets))
+      {                
+
+        ##ovl <- overlap(path, dbName, tables=tables, targets[i], numOverlapping, full=FALSE)
+        ovl <- overlapMircoRNAs(path, dbName, tables=tables, targets[i], numOverlapping, full=FALSE)
+        
+        idx <- which(rownames(X) %in% rownames(ovl))
+        
+        if(is.null(ovl) | length(idx) < 1)
+          next
+        
+        sX <- X[idx,, drop=FALSE]
+        sy <- Y[which(rownames(Y) %in%  targets[i]),]
+       
+        if(nrow(sX) <= 1) ##number of targets should be > 1 (?)
+          next
+        
+        weights <- rep(1, nrow(sX))
+        
+        obj <- gt(sy, t(sX), directional=1e-6, weight = weights)
+        
+        tbl <- gtTable(obj)
+        tbl <- tbl[order(tbl$Association, tbl$Pvalue),]
+        if(top == -1)
+          mirs[[targets[i]]] <- tbl
+        else
+          mirs[[targets[i]]] <- tbl[1:max(c(top, nrow(tbl))),]
+        
+        mrnas[i,1] <- p.value(obj)
+        mrnas[i,2] <- size(obj)       
+      }
+    
+    colnames(mrnas) <- c("Pvalue", "mirs")
+    rownames(mrnas) <- targets    
+    mrnas <- data.frame(na.omit(mrnas))
+    mrnas <- mrnas[order(mrnas$Pvalue), ]
+    
+    list(targets=mrnas, mirs=mirs)
+  }
+
+
+rungtw <- function(mirs, X, Y, path, dbName, tables, numOverlapping, weight=c("None", "Score", "max", "minmax", "rank"), top=-1, ...)
+  {
+    targets <- list()
+    micrornas <- matrix(NA, nrow=length(mirs), ncol=2)
+    for(i in 1:length(mirs))
+      {
+                
+        ovl <- overlap(path, dbName, tables=tables, mirs[i], numOverlapping, full=FALSE)
+        if(is.null(ovl))
+          {
+            print("overlap is null")
+            targets[[i]] <- data.frame(Pvalue=NA, Association=NA, Weights = NA, zscores=NA)
+            next
+          }
+        
+        sX <- X[rownames(X) %in% rownames(ovl),, drop=FALSE]
+        ##sy <- Y[rownames(Y) %in%  mirs[i],]
+        sy <- Y[i,]
+          
+        if(nrow(sX) < 1) ##number of targets should be at least 1
+          {
+            print("number of targets is zero")
+            targets[[i]] <- data.frame(Pvalue=NA, Association=NA, Weights = NA, zscores=NA)
+            next
+          }
+
+        print(dim(sX))
+        
+        ##acetrans <- ace(t(sX), sy)
+        avastrans <- avas(t(sX), sy)
+        stX <- t(avastrans$tx)
+        sty <- avastrans$ty
+        
+        ##obj <- gt(sty, t(stX), directional=1e-6)
+        obj <- gt(sty, t(stX), directional=TRUE)
+    
+        tbl <- gtTable(obj)
+        tbl <- tbl[order(tbl$Association, tbl$Pvalue),]
+        if(top == -1)
+          targets[[i]] <- tbl
+        else
+          targets[[i]] <- tbl[1:max(c(top, nrow(tbl))),]
+        
+        micrornas[i,1] <- p.value(obj)
+        micrornas[i,2] <- size(obj)       
+      }
+    
+    colnames(micrornas) <- c("Pvalue", "targets")
+    
+    ##rownames(micrornas) <- mirs
+    
+    ##micrornas <- data.frame(na.omit(micrornas))
+    ##micrornas <- micrornas[order(micrornas$Pvalue), ]
+    
+    list(mirs=micrornas, targets=targets)
+  }
+
+## retrieve sets
+lookUp <- function (x, data, what, load = FALSE, rev=FALSE) ##extension for reverse mapping
+{
+  require(annotate)
+  if (length(x) < 1) {
+    stop("No keys provided")
+  }
+  if(rev)          
+    mget(x, envir = revmap(getAnnMap(what, chip = data, load = load)), ifnotfound = NA)
+  else
+    mget(x, envir = getAnnMap(what, chip = data, load = load), ifnotfound = NA)
+}
+
+gtTargetScan <- function(response, exprs, id, multtest = c("Holm", "BH", "BY"), sort = TRUE, x= FALSE) 
+  {
+    gt.options(transpose=FALSE)
+    
+    ##TODO checking the input and annotation    
+    ##response ##matrix qxn
+    ##exprs    ##matrix pxn
+    
+    require(targetscan.Hs.eg.db)
+    extension <- "TARGETS"
+    annotation <- "targetscan.Hs.eg"
+    TSOBJECT <- revmap(eval(as.name(paste(annotation, extension, sep=""))))
+    
+    ## default terms
+    if(missing(id))   
+      id <- mappedkeys(TSOBJECT)
+
+    sets <- lookUp(id, annotation, extension, rev=TRUE)
+
+    ##reduce sets
+    sets <- lapply(sets, function(x) x[x %in% rownames(exprs)])
+    sets <- lapply(sets, unique)
+
+    ##loop over the sets
+    if(length(sets) > 1)
+      {
+        res <- sapply(1:length(sets), function(x) {          
+          y <- response[which(rownames(response) == names(sets[x])),]      
+          gt(y, t(exprs), subset=sets[x])
+        }, USE.NAMES=TRUE)
+        names(res) <- sets
+      }
+    else
+      {
+      y <- response[which(rownames(response) == names(sets)),]      
+      res <- gt(y, t(exprs), subset=sets)
+    }
+    res               
+  }
+
+  
+library(targetscan.Hs.eg.db)
+##convert microRNA id to family
+families <- mget(rownames(X), revmap(targetscan.Hs.egFAMILY2MIRBASE), ifnotfound=NA)
+nas <- is.na(unlist(families))
+rownames(X)[!nas] <- unlist(families)[!nas]
+
+response <- by(X, rownames(X), function(x) apply(x, 2, median))
+response <- matrix(unlist(Z), ncol=12, byrow=TRUE)
+rownames(response) <- unique(rownames(X))
+colnames(response) <- colnames(X)
+
+exprs <- Y
+
+res <- gtTargetScan(response, exprs) 
+
+ft <- features(res, pdf="/data/articles/2012miRNA/HIV/results/feature.pdf")
+ft <- features(res[[1]])
+
+
+library(golubEsets)
+data(Golub_Train)
+library(vsn)
+exprs(Golub_Train) <- exprs(vsn2(Golub_Train))
+gt(ALL.AML, Golub_Train)
+
+
+res <- gtKEGG(ALL.AML, Golub_Train, id = "04110")
+
+ft <- features(res)
+leafNodes(ft)
+
+
+
+
+
+uniqueMirs <- function(path, dbName, target, tables=NULL)
+{      
+  m <- dbDriver("SQLite")               # simple sql request of scores
+  con <- dbConnect(m, file.path(path, dbName))
+    
+  if(missing(tables))
+    tables <- dbListTables(con)
+  
+  mirs <- as.character()
+  for(table in tables)
+    {      
+      query <- paste("SELECT DISTINCT miRNA FROM ", table, " WHERE mRNA = '", target, "' ", sep="")
+      x <- dbGetQuery(con, query)$miRNA                
+
+      mirs <- c(mirs, x)
+    }
+  
+  invisible(dbDisconnect(con))          #close connection
+  
+  mirs <- mirs[!duplicated(mirs)]
+  ##targets[!is.na(targets)]
+  mirs
+}
+
+
+overlapMircoRNAs <- function(path, dbName, tables=NULL, target, numOverlapping=2, full=TRUE)
+  {    
+    m <- dbDriver("SQLite")             # simple sql request of scores
+    con <- dbConnect(m, file.path(path, dbName))
+
+    if(is.null(tables))
+      tables <- dbListTables(con)
+    
+    uMirs <- uniqueMirs(path, dbName, target)
+    
+    overlappingMirs <- matrix(FALSE, nrow=length(uMirs), ncol=length(tables))
+    
+    for(i in 1:length(tables))
+      {
+        mirs <- uniqueMirs(path, dbName, target, tables[i])
+        overlappingMirs[,i] <- uMirs %in% mirs 
+      }
+   
+    invisible(dbDisconnect(con))        #close connection
+    
+    colnames(overlappingMirs) <- tables
+    rownames(overlappingMirs) <- uMirs    
+
+    if(!full)
+      overlappingMirs <- overlappingMirs[apply(overlappingMirs, 1, sum) >= numOverlapping, , drop=FALSE] #drop=FALSE in case one row left
+    
+    if(!any(apply(overlappingMirs, 1, sum) >= numOverlapping))
+      {
+      cat(paste(target, " has no overlapping microRNAs between the tables: ", paste(tables, collapse=", ", sep=""), "! ...\n", sep=""))
+      return(NULL)
+    }
+    cat(paste(target, " has ", nrow(overlappingMirs), " overlapping microRNAs between the tables: ", paste(tables, collapse=", ", sep=""), "! ...\n", sep=""))
+   
+    overlappingMirs    
+  }
+
+rungtreverted<- function(targets, X, Y, path, dbName, tables, numOverlapping, weight=c("None", "Score", "max", "minmax", "rank"), top=-1)
+  {
+    ##for the moment necessary for weighting
+    TablesData <- list()
+    for(table in tables)
+      TablesData[[table]] <- dbHeadTable(file.path(path), dbName, table, n=-1)
+
+    mirs <- list()
+    mrnas <- matrix(NA, nrow=length(targets), ncol=2)
+    for(i in 1:length(targets))
+      {                
+
+        ##ovl <- overlap(path, dbName, tables=tables, targets[i], numOverlapping, full=FALSE)
+        ovl <- overlapMircoRNAs(path, dbName, tables=tables, targets[i], numOverlapping, full=FALSE)
+        
+        idx <- which(rownames(X) %in% rownames(ovl))
+        
+        if(is.null(ovl) | length(idx) < 1)
+          next
+        
+        sX <- X[idx,, drop=FALSE]
+        sy <- Y[which(rownames(Y) %in%  targets[i]),]
+       
+        if(nrow(sX) <= 1) ##number of targets should be > 1 (?)
+          next
+        
+        weights <- rep(1, nrow(sX))
+        
+        obj <- gt(sy, t(sX), directional=1e-6, weight = weights)
+        
+        tbl <- gtTable(obj)
+        tbl <- tbl[order(tbl$Association, tbl$Pvalue),]
+        if(top == -1)
+          mirs[[targets[i]]] <- tbl
+        else
+          mirs[[targets[i]]] <- tbl[1:max(c(top, nrow(tbl))),]
+        
+        mrnas[i,1] <- p.value(obj)
+        mrnas[i,2] <- size(obj)       
+      }
+    
+    colnames(mrnas) <- c("Pvalue", "mirs")
+    rownames(mrnas) <- targets    
+    mrnas <- data.frame(na.omit(mrnas))
+    mrnas <- mrnas[order(mrnas$Pvalue), ]
+    
+    list(targets=mrnas, mirs=mirs)
+  }
+
+results <- rungtreverted(targets, miExprs, mExprs, file.path(path, "targets_data"), dbName, c("microcosm", "pita", "targetscan"), 3, weight="None")

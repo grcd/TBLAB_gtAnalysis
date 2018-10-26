@@ -1,0 +1,42 @@
+
+	**************************************************
+	*									 *
+	*	       miRNAmRNA NEWS			 *
+	*									 *
+	**************************************************
+
+
+CHANGES IN miRNAmRNA Revision 14
+
+
+NEW FEATURES
+
+    o	createdatabase.R	
+		o  dbName is now added for all createDB tools, so you can specify other databases to store the data
+   
+
+BUG FIXES
+
+		o Removed negative function in mirnamrna.R because of statistical incorrect assumptions
+
+	
+	
+CHANGES IN miRNAmRNA VERSION 0.0.2
+
+
+NEW FEATURES
+
+    o	Main.R	
+		o  dbName is now the default variable for the name of the database, this is combined with dataDir for a full database path
+   
+
+BUG FIXES
+
+		o removed redundant code
+		o better if/else management
+		o more error handling
+    
+
+	
+
+   
