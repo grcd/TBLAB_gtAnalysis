@@ -4,17 +4,19 @@
 #	Una volta scaricato il Batch da TCGA, decomprimerlo e far partire lo script nella stessa cartella. 
 #	Verrà creata una directory buildTCGASets/ al cui interno troviamo:
 #		
-#		buildTCGASets/	file_manifest_T.txt				file_manifest.txt filtered sample	Tumor
-#						file_manifest_N.txt												Normal
-#						file_manifest.TN.txt												Tumor-Normal matched			
-#						samples_missing.mirbase20.txt		campioni esclusi per mancanza di miRNASeq data
-#						samples_missing.rsem.txt			campioni esclusi per mancanza di RNASeqV2 data
+#		buildTCGASets/	
+#           file_manifest_T.txt				file_manifest.txt filtered sample	Tumor
+#						file_manifest_N.txt								Normal
+#						file_manifest.TN.txt							Tumor-Normal matched			
+#						samples_missing.mirbase20.txt		  campioni esclusi per mancanza di miRNASeq data
+#						samples_missing.rsem.txt			    campioni esclusi per mancanza di RNASeqV2 data
 #
-#		buildTCGASets/T/	X_T				matrice [mRNAs]  x [samples]
-#						Z_T				matrice [miRNAs] x [samples]	
-#						T_mirnas.txt		lista dei mirnas
-#						T_mrnas.txt		lista degli mrnas
-#						T_samples.txt	lista dei campioni/SampleID
+#		buildTCGASets/T/	
+#           X				      matrice [mRNAs]  x [samples]
+#						Z				      matrice [miRNAs] x [samples]	
+#						mirnas.txt		lista dei mirnas
+#						mrnas.txt		  lista degli mrnas
+#						samples.txt	  lista dei campioni/SampleID
 #						
 #					 N/	{come sopra}
 #					 TN/	{come sopra}
@@ -245,11 +247,11 @@ for (sample in samples) {
 }
 
 write.table(Z_T, 
-			paste(mat.directory, "Z_T", sep=.Platform$file.sep),
+			paste(mat.directory, "Z", sep=.Platform$file.sep),
 			quote=FALSE, sep='\t')
 
 write.table(data.frame(miRNA_ID=mirnas), 
-			paste(mat.directory, "T_mirnas.txt", sep=.Platform$file.sep), 
+			paste(mat.directory, "mirnas.txt", sep=.Platform$file.sep), 
 			quote=FALSE, row.names=FALSE)	
 					
 rm(mirnas); rm(mr)
@@ -319,15 +321,15 @@ for (sample in samples) {
 }
 
 write.table(X_T, 
-			paste(mat.directory, "X_T", sep=.Platform$file.sep),
+			paste(mat.directory, "X", sep=.Platform$file.sep),
 			quote=FALSE, sep='\t')
 
 write.table(data.frame(mRNA_EntrezId=mrnas), 
-			paste(mat.directory, "T_mrnas.txt", sep=.Platform$file.sep), 
+			paste(mat.directory, "mrnas.txt", sep=.Platform$file.sep), 
 			quote=FALSE, row.names=FALSE)			
 			
 write.table(data.frame(SampleID=samples), 
-			paste(mat.directory, "T_samples.txt", sep=.Platform$file.sep), 
+			paste(mat.directory, "samples.txt", sep=.Platform$file.sep), 
 			quote=FALSE, row.names=FALSE)	
 
 cat(sprintf("DONE. number_of_samples=%d, mRNAs=%d, miRNAs=%d\n", length(samples), nrow(X_T), nrow(Z_T)))
@@ -404,11 +406,11 @@ for (sample in samples) {
 }
 
 write.table(Z_N, 
-			paste(mat.directory, "Z_N", sep=.Platform$file.sep),
+			paste(mat.directory, "Z", sep=.Platform$file.sep),
 			quote=FALSE, sep='\t')
 
 write.table(data.frame(miRNA_ID=mirnas), 
-			paste(mat.directory, "N_mirnas.txt", sep=.Platform$file.sep), 
+			paste(mat.directory, "mirnas.txt", sep=.Platform$file.sep), 
 			quote=FALSE, row.names=FALSE)		
 
 rm(mirnas); rm(mr)
@@ -477,15 +479,15 @@ for (sample in samples) {
 }
 
 write.table(X_N, 
-			paste(mat.directory, "X_N", sep=.Platform$file.sep),
+			paste(mat.directory, "X", sep=.Platform$file.sep),
 			quote=FALSE, sep='\t')
 
 write.table(data.frame(mRNA_EntrezId=mrnas), 
-			paste(mat.directory, "N_mrnas.txt", sep=.Platform$file.sep), 
+			paste(mat.directory, "mrnas.txt", sep=.Platform$file.sep), 
 			quote=FALSE, row.names=FALSE)		
 
 write.table(data.frame(SampleID=samples), 
-			paste(mat.directory, "N_samples.txt", sep=.Platform$file.sep),
+			paste(mat.directory, "samples.txt", sep=.Platform$file.sep),
 			quote=FALSE, row.names=FALSE)	
 
 cat(sprintf("DONE. number_of_samples=%d, mRNAs=%d, miRNAs=%d\n", length(samples), nrow(X_N), nrow(Z_N)))

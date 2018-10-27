@@ -1,11 +1,11 @@
 
 #
-#   TBLAB Globaltest reverse model Analysis (y=mRNA, X=miRNAs)
+#   TBLAB Globaltest REVERSE model Analysis (y=mRNA, X= putative miRNAs regulators)
 #
 
-rm(list=ls())
-WORKINGDIR = "/Users/danielegreco/Desktop/CNR_TCGA"
-setwd(WORKINGDIR)
+#rm(list=ls())
+#WORKINGDIR = "/Users/danielegreco/Desktop/CNR_TCGA"
+#setwd(WORKINGDIR)
 library(globaltest)
                                                        # utils
 source("lib/utils/readExpressionData.R")
@@ -16,9 +16,10 @@ source("lib/miRNAmRNA/R/mirnamrna.R")                  # globaltest related
 source("lib/miRNAmRNA/R/db_functions.R")
 source("lib/miRNAmRNA/R/parsers.R")
 
+
 ################################################################
 #                                                              #
-#                         PARAMETERS                           #
+#                         SETUP:                               #
 #                                                              #
 ################################################################
 
@@ -29,11 +30,11 @@ source("lib/miRNAmRNA/R/parsers.R")
 #
 #   Le matrici sono accoppiate: le colonne di X e Z provengono dagli gli stessi individui.
 
-X.file 	= "buildTCGASets/T/X_T"                   # mRNA expression matrix  
-Z.file 	= "buildTCGASets/T/Z_T"                   # miRNA expression matrix 
-X.names = "buildTCGASets/T/T_mrnas.txt"           # rownames(X), mRNA labels
-Z.names	= "buildTCGASets/T/T_mirnas.txt"          # rownames(Z), miRNA labels
-samples.names = "buildTCGASets/T/T_samples.txt"   # colnames(X), sample unique ID
+X.file 	= file.path(EXPRESSION_DIR, "X")                  # mRNA expression matrix  
+Z.file 	= file.path(EXPRESSION_DIR, "Z")                  # miRNA expression matrix 
+X.names = file.path(EXPRESSION_DIR, "mrnas.txt")          # rownames(X), mRNA labels
+Z.names	= file.path(EXPRESSION_DIR, "mirnas.txt")         # rownames(Z), miRNA labels
+samples.names = file.path(EXPRESSION_DIR, "samples.txt")  # colnames(X), sample unique ID
 
 # 1.2. Interazioni putative
 #
@@ -49,8 +50,9 @@ samples.names = "buildTCGASets/T/T_samples.txt"   # colnames(X), sample unique I
 #            miRNA regolatore i (righe); FALSE altrimenti.
 #
 # PI.path è il percorso al file R contenente la matrice PI.
-PI.path = file.path(getwd(), "TBLAB_PI_BRCA_Batch93/BRCA_Batch93_PI_T_Rdata")   # Tumor   samples
+#PI.path = file.path(getwd(), "datasets/TBLAB_PI_BRCA_Batch93/BRCA_Batch93_PI_T_Rdata")   # Tumor   samples
 #PI.path = file.path(getwd(), "TBLAB_PI_BRCA_Batch93/BRCA_Batch93_PI_N_Rdata")  # Normal  samples
+PI.path = PUTATIVE_FILE   # Tumor samples
 
 
 # 1.3  Mapping EntrezID <--> EnsemblID for protein-coding mRNAs
@@ -60,14 +62,20 @@ PI.path = file.path(getwd(), "TBLAB_PI_BRCA_Batch93/BRCA_Batch93_PI_T_Rdata")   
 # Un mapping tra i due mondi è dato da HGNC (http://www.genenames.org/).
 # HGNC.proteincoding è una versione "ridotta all'osso" del file originario
 # scaricabile da HGNC, generato dallo script ausiliario lib/utils/getProteinCodingGenes.R .
-HGNC.proteincoding 	= "NCBI_HGNC/hgnc_protein_coding_reduced.txt"  
+#HGNC.proteincoding 	= "datasets/NCBI_HGNC/hgnc_protein_coding_reduced.txt"  
+HGNC.proteincoding 	= HGNC_FILE  
+
 
 # 1.4  False Discovery Rate for pvalues adjustments
-FDR.alpha = .01  # FDR threshold
+#FDR.alpha = 0.01
+FDR.alpha = FDR_ALPHA  # FDR threshold
 
 # 1.5  Risultati in output
-results.PATH = sprintf("results_%s", basename(getwd()))  # output directory
-
+if (RESULTS_DIR == "") {
+  results.PATH = sprintf("results_%s", basename(getwd()))  # output directory
+} else {
+  results.PATH = RESULTS_DIR
+}
 
 ################################################################
 #                                                              #
@@ -161,7 +169,8 @@ rr_raw  <- runrgt.TBLAB(trgs=rownames(data$X),
                         path="", 
                         dbName="", 
                         credentials=NULL, 
-                        putatives=PI)
+                        putatives=PI,
+                        debug=DEBUG)
 save(rr_raw, file=file.path(results.PATH, "rr_raw.Rdata") )
 cat("OK!\n")
 t2=Sys.time(); difftime(t2, t1)

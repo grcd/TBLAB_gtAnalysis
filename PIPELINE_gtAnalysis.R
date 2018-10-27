@@ -3,32 +3,32 @@
 
 rm(list=ls())
 
-# ################################################################
-# #                                                              #
-# #                         PARAMETERS                           #
-# #                                                              #
-# ################################################################
-# 
-# # WORKING_DIR: root directory
-# WORKING_DIR = "/Users/danielegreco/Desktop/CNR_TCGA"
-# 
-# # EXPRESSION_DIR: output directory resulting from buildTCGASets the given expression dataset 
-# EXPRESSION_DIR = "datasets/TCGA_BRCA_Batch93/buildTCGASets/T"  # (T = Tumor set)
-# 
-# # PUTATIVE_FILE: Rdata file containing predicted putative target mRNAs for miRNAs listed in the expression dataset
-# PUTATIVE_FILE = "datasets/TBLAB_PI_BRCA_Batch93/BRCA_Batch93_PI_T_Rdata"
-# 
-# # HGNC_FILE: EnsembleId-EntrezId mapping file for protein coding genes
-# HGNC_FILE = "datasets/NCBI_HGNC/hgnc_protein_coding_reduced.txt"
-# 
-# # FDR_ALPHA: confidence level for pvalues FDR adjustament/filtering 
-# FDR_ALPHA = 0.01
-# 
-# # RESULTS_DIR: output directory for this analysis
-# RESULTS_DIR = ""
-# 
-# # DEBUG
-# DEBUG=NULL
+################################################################
+#                                                              #
+#                         PARAMETERS                           #
+#                                                              #
+################################################################
+
+# WORKING_DIR: root directory
+WORKING_DIR = "/Users/danielegreco/Desktop/CNR_TCGA"
+
+# EXPRESSION_DIR: output directory resulting from buildTCGASets the given expression dataset 
+EXPRESSION_DIR = "datasets/TCGA_BRCA_Batch93/buildTCGASets/T"  # (T = Tumor set)
+
+# PUTATIVE_FILE: Rdata file containing predicted putative target mRNAs for miRNAs listed in the expression dataset
+PUTATIVE_FILE = "datasets/TBLAB_PI_BRCA_Batch93/BRCA_Batch93_PI_T_Rdata"
+
+# HGNC_FILE: EnsembleId-EntrezId mapping file for protein coding genes
+HGNC_FILE = "datasets/NCBI_HGNC/hgnc_protein_coding_reduced.txt"
+
+# FDR_ALPHA: confidence level for pvalues FDR adjustament/filtering 
+FDR_ALPHA = 0.01
+
+# RESULTS_DIR: output directory for this analysis
+RESULTS_DIR = ""
+
+# DEBUG
+DEBUG=NULL
 
 
 ################################################################
