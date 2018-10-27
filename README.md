@@ -5,39 +5,47 @@ Integrated analysis of microRNA and mRNA expression using the Global Test, TCGA 
 
 Summary (draft)
 ---------------
-miRNAs are small RNA molecules involved in key regulatory post-transcriptional processes, recently correlated to different diseases [7]. Therefore, deciphering miRNA targets is crucial for diagnostics and therapeutics. In recent years, several sequence-complementarity based computational methods for predicting putative miRNA:mRNA interactions have been developed. However, the predicted interactions using different approaches are often inconsistent and false positive rates are still expected to be large. [6]
+miRNAs are small (~22 nt) RNA molecules involved in key regulatory post-transcriptional processes, and related with the  development and progressing of different diseases [7]. Therefore, deciphering miRNA targets is crucial for diagnostics and therapeutics. 
 
-Recently, it has been proposed to use the expression values of miRNAs and mRNAs (and/or proteins) to refine the results of sequence-based putative targets for a particular experiment. These methods have shown to be effective identifying the most prominent interactions from the databases of putative targets. [5] 
+In the last decade, several sequence-complementarity based computational methods for predicting putative miRNA:mRNA interactions have been developed. However, the predicted interactions using different approaches are often inconsistent and false positive rates are still expected to be large [6].
 
-In this preliminary work, we employ the global test [2-4] to identify the most significant miRNA:mRNA interactions with respect to a particular tissue / condition as represented in expression data. Following the methodology of *Van Iterson et al.* [1], we combine RNASeqV2, miRNASeq expression data (obtained from The Cancer Genome Atlas initiative) with a set of putative target mRNAs, obtaining a list of significant miRNA:mRNA pairs according to the globaltest.
+Recently, it has been proposed to use the expression values of miRNAs and mRNAs (and/or proteins) to refine the results of sequence-based putative targets for a particular experiment. These methods have shown promising results in identifying the most prominent interactions from the databases of putative targets [5]. 
+
+In this preliminary work, we employ the global test [2-4] to identify the most significant miRNA:mRNA interactions with respect to a particular tissue / condition as represented in expression data. Following the methodology of *Van Iterson et al.* [1], we combine RNASeqV2, miRNASeq expression data obtained from The Cancer Genome Atlas (TCGA) initiative with a set of putative target mRNAs, providing a list of significant miRNA:mRNA pairs according to the globaltest.
+
 
 Global test 
 -----------
 
-For a detailed explanation and formal proofs see [2-4]. More information about the package utils can be found in the [globaltest vignette](https://bioconductor.org/packages/release/bioc/vignettes/globaltest/inst/doc/GlobalTest.pdf).
+For a detailed explanation and formal proofs see *Goeman et al.* [2-4]. More information about the package utils can be found in the [globaltest vignette](https://bioconductor.org/packages/release/bioc/vignettes/globaltest/inst/doc/GlobalTest.pdf).
 
 Global test summary:
-* **The idea**: "Is this subset of covariates (tested group) associated with the response?" 
+* **The idea**. Question: "Is this subset of covariates (tested group) associated with the response?" 
 
-* **The hypothesis test**:
+* **The hypothesis test**. The global test is meant for data sets in which many covariates (or features) have been measured for the same subjects, together with a response variable.
 ```
 	- H_0:  none of the covariates in the tested group is associated with the response.
-	- H_a:  *at least* one of the covariates in the tested group is associated.
+	- H_a:  *at least* one of the covariates in the tested group is associated with the response.
 ```
 
-However, the global test is especially directed against: 
+However, as explained in [1], the global test is especially directed against: 
 
 ```
 	- H_a*: "most" covariates are associated with the response in a "small" way.
 ```
 
-In fact, *Goeman et al.* [2-4] proves the global test is the optimal test to use against H_a*
+In fact, *Goeman et al.* [2-4] proves the global test is the optimal test to use against such an alternative H_a*.
 
-* **Flexible**: based on regression models depending upon the response variable type: linear regression (continuous response), logistic regression (binary response), ... .
+* **Flexible**. The global test is based on regression models in which the distribution of the response variable is modeled as a function of the covariates. The type of regression model depends on the response:
+** linear regression (continuous response),
+** logistic regression (binary response),
+** multinomial logistic regression (multi-class response),
+** Poisson regression (count response),
+** the Cox proportional hazards model (survival response).
 
-* **Decomposable**: the global test statistic on a set of covariates (tested group) can be seen as a weighted average of the global test statistic for each individual alternative covariate.
+* **Decomposable**. The global test statistic on a set of covariates (tested group) can be seen as a weighted average of the global test statistic for each individual alternative covariate (see Supplemental Material [1]).
 
-* **Package utils**:
+* **Package utils**.
 	1. *Diagnostic plots*: useful to assess the influence if each individual covariate in a given tested group.
 	2. *Multiple testing procedures*: useful if we want to run the test multiple times using different tested groups.
 
@@ -46,8 +54,8 @@ Installation and Requirements
 -----------------------------
 To run the pipeline, some dependencies must be installed:
 
-1. R version 3.5.1 (2018-07-02) -- "Feather Spray", download it [here](https://www.r-project.org/)
-2. [Bioconductor globaltest](https://bioconductor.org/packages/release/bioc/html/globaltest.html) package
+1. R version 3.5.1 (2018-07-02) -- "Feather Spray", can be downloaded [here](https://www.r-project.org/),
+2. [Bioconductor globaltest](https://bioconductor.org/packages/release/bioc/html/globaltest.html) package.
 
 Once (1) has been installed, the script `INSTALL.R` proceeds to install (2):
 ```
@@ -84,7 +92,7 @@ As detailed below, our pipeline **Phase 1** uses TCGA files to construct 3 set o
 
 ##### b) Set of putative sequence-based mRNA targets provided by TBLAB: 
 
-A set of predicted target-mRNAs based on sequence complementarity provided by TBLAB is stored in:
+A set of predicted target mRNAs, based on sequence complementarity, is provided by [TBLAB](https://www.icar.cnr.it/en/laboratori-icar/bioinformatica-traslazionale-tb-lab/) and conveniently stored in:
 
 ``` 
 datasets/TBLAB_PI_BRCA_Batch93/
@@ -151,9 +159,9 @@ datasets/TCGA_BRCA_Batch93/buildTCGASets/
 ```
 
 The script uses the original TCGA `file_manifest.txt` within the batch to filter the data. In order to avoid spourious data, we filter out all the samples with missing RNASeqV2 and miRNASeq expression data and log them into `samples_missing.mirbase20.txt` and `samples_missing.rsem.txt` files, respectively.
-\
+
 Using the [Sample type codes](https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/sample-type-codes), we subset Tumor and Normal samples, creating `file_manifest_T.txt` and `file_manifest_N.txt` indexing files.
-\
+
 Each set of matrices (`/T`, `/N`, `/TN`) is created within its subdirectory. Let's see their basic structure in R to get an idea of how they are arranged:
 
 ```
