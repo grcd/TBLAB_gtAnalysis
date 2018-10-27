@@ -101,13 +101,32 @@ datasets/TBLAB_PI_BRCA_Batch93/
 ```
 
 #### 1. Unpack the downloaded data:
+We assume `$GTHOME` contains the path where we've downloaded this repository and `TCGA_BRCA_Batch93.tar.z`:
 
 ```
-	$ mv TCGA_BRCA_Batch93.tar.z $HOME/datasets
-	$ tar xzvf $HOME/datasets/TCGA_BRCA_Batch93.tar.z
+	$ ls -l $GTHOME
+	-rw-r--r--@ 1 danielegreco  staff  23399 27 Ott 13:21 BuildTCGASets.R
+	-rw-r--r--@ 1 danielegreco  staff     85 27 Ott 13:21 INSTALL.R
+	-rw-r--r--@ 1 danielegreco  staff   2193 27 Ott 13:21 PIPELINE_gtAnalysis.R
+	-rw-r--r--@ 1 danielegreco  staff  20325 27 Ott 13:21 README.md
+	-rw-r--r--@ 1 danielegreco  staff  10345 27 Ott 13:21 TBLAB_gtAnalysis_original.R
+	-rw-r--r--@ 1 danielegreco  staff  10168 27 Ott 13:21 TBLAB_gtAnalysis_reverse.R
+	-rw-r--r--@ 1 danielegreco  staff  550300968 27 Ott 13:23 TCGA_BRCA_Batch93.tar.z
+	drwxr-xr-x@ 6 danielegreco  staff    192 27 Ott 13:25 datasets
+	drwxr-xr-x@ 4 danielegreco  staff    128 27 Ott 13:21 images
+	drwxr-xr-x@ 4 danielegreco  staff    128 27 Ott 13:21 lib
+	drwxr-xr-x@ 7 danielegreco  staff    224 27 Ott 13:21 references	
 ```
 
-The new directory `datasets/TCGA_BRCA_Batch93` containing all the raw files is created.
+Therefore, we proceed:
+
+```
+	$ mv TCGA_BRCA_Batch93.tar.z $GTHOME/datasets
+	$ cd $GTHOME/datasets
+	$ tar xzvf TCGA_BRCA_Batch93.tar.z
+```
+
+The new directory `$GTHOME/datasets/TCGA_BRCA_Batch93` containing all the raw files is created.
 
 
 #### 2. Construct the expression matrices
@@ -115,7 +134,8 @@ The new directory `datasets/TCGA_BRCA_Batch93` containing all the raw files is c
 Using the `BuildTCGASets_args.R` script we automatically construct the **miRNA** (`Z`) and **mRNA** (`X`) expression matrices from raw files, to be used in Phase 2 analysis:
 
 ```
-	$ Rscript BuildTCGASets_args.R $HOME/datasets/TCGA_BRCA_Batch93/
+	$ cd $GTHOME
+	$ Rscript BuildTCGASets_args.R $GTHOME/datasets/TCGA_BRCA_Batch93/
 	* Generating set T: DONE. number_of_samples=45, mRNAs=20502, miRNAs=1870
 	* Generating set N: DONE. number_of_samples=14, mRNAs=20502, miRNAs=1870
 	* Generating set TN: DONE. number_of_paired_samples=14, mRNAs=20502, miRNAs=1870	
@@ -166,6 +186,9 @@ Each set of matrices (`/T`, `/N`, `/TN`) is created within its subdirectory. Let
 
 ```
 # R interactive session
+$ R
+
+> X = read.delim(file="$GTHOME/datasets/TCGA_BRCA_Batch93/buildTCGASets/T/X_T", sep='\t', stringsAsFactors=F)
 > X[1:5, 1:5]
        TCGA-BH-A0BO-01 TCGA-BH-A0C1-01 TCGA-BH-A0DO-01 TCGA-BH-A0DT-01 TCGA-BH-A18F-01 ...
 1          4.975586328      7.54756129      5.95110029     5.702931416      3.81460272
@@ -174,6 +197,7 @@ Each set of matrices (`/T`, `/N`, `/TN`) is created within its subdirectory. Let
 87769      3.021424811      3.85754568      5.46446431     5.180218956      2.98751977
 144568     0.009233192      0.07746402      0.03617961     0.006970869      0.11777070
 
+> X = read.delim(file="$GTHOME/datasets/TCGA_BRCA_Batch93/buildTCGASets/T/X_T", sep='\t', stringsAsFactors=F)
 > Z[1:5, 1:5]
              TCGA-BH-A0BO-01 TCGA-BH-A0C1-01 TCGA-BH-A0DO-01 TCGA-BH-A0DT-01 TCGA-BH-A18F-01
 hsa-let-7a-1        8321.442       10030.033       12562.758       11251.274       10707.374
