@@ -228,7 +228,8 @@ The `PIPELINE_gtAnalysis.R` script runs the analysis. Prior to executing it, let
 ################################################################
 
 # WORKING_DIR: root directory
-WORKING_DIR = "/Users/danielegreco/Desktop/CNR_TCGA"
+args = commandArgs(trailingOnly=TRUE)
+WORKING_DIR = args[1]
 
 # EXPRESSION_DIR: output directory resulting from buildTCGASets the given expression dataset 
 EXPRESSION_DIR = "datasets/TCGA_BRCA_Batch93/buildTCGASets/T"  # (T = Tumor set)
@@ -252,7 +253,7 @@ DEBUG=NULL
 
 A few notes about the parameters:
 
-* `WORKING_DIR` corresponds to the directory where we have installed the scripts.
+* `WORKING_DIR` corresponds to the directory where we have installed the scripts, taken from command line.
 * `EXPRESSION_DIR` is where built matrices (Phase 1, see above) were successfully built. It is necessary to specify the subdirectory related to a particular set. 
 * `PUTATIVE_FILE`: predicted sequence-based mRNA targets provided by TBLAB.
 * `HGNC_FILE`: TBLAB uses *EnsemblIds* for genes whereas TCGA uses *EntrezIds*. This file contains a mapping between the two worlds.
@@ -262,7 +263,7 @@ A few notes about the parameters:
 
 Now, we run the analysis:
 ```
-	$ Rscript PIPELINE_gtAnalysis.R
+	$ Rscript PIPELINE_gtAnalysis.R $GTHOME
 ```
 
 
