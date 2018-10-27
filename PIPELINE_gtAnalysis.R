@@ -10,7 +10,8 @@ rm(list=ls())
 ################################################################
 
 # WORKING_DIR: root directory
-WORKING_DIR = "/Users/danielegreco/Desktop/CNR_TCGA"
+args = commandArgs(trailingOnly=TRUE)
+WORKING_DIR = args[1]
 
 # EXPRESSION_DIR: output directory resulting from buildTCGASets the given expression dataset 
 EXPRESSION_DIR = "datasets/TCGA_BRCA_Batch93/buildTCGASets/T"  # (T = Tumor set)
