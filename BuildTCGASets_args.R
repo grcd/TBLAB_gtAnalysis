@@ -22,8 +22,6 @@
 #					 TN/	{come sopra}
 #	
 
-suppressMessages(library(dplyr))
-
 #   test if there is at least one argument: if not, return an error
 args = commandArgs(trailingOnly=TRUE)
 if (length(args)==0) {
