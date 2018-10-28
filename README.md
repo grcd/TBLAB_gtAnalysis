@@ -22,7 +22,7 @@ For a detailed explanation and formal proofs see *Goeman et al.* [2-4]. More inf
 Global test summary:
 * **The idea**. Question: "Is this subset of covariates (tested group) associated with the response?" 
 
-* **The hypothesis test**. The global test is meant for data sets in which many covariates (or features) have been measured for the same subjects, together with a response variable.
+* **The hypothesis test**. The global test is meant for data sets in which many covariates (or features) have been measured for the same subjects, together with a response variable. The hypothesis test is as follows:
 ```
 	- H_0:  none of the covariates in the tested group is associated with the response.
 	- H_a:  *at least* one of the covariates in the tested group is associated with the response.
